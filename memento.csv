@@ -1,0 +1,2 @@
+search files linux,grep -rnw '.' -e 'keyword'
+untar a tar.gz,tar -xvzf
