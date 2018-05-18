@@ -1,2 +1,5 @@
-search files linux,grep -rnw '.' -e 'keyword'
-untar a tar.gz,tar -xvzf
+search files linux,grep -rnw '.' -e 'keyword',,
+untar a tar.gz,tar -xvzf,,
+search error codes in Lunar module, tra la la,,
+guake restart,ps -ef | grep guake | grep -v grep | awk '{print $2}' | xargs kill -9 && guake &,1,
+http://www.google.com/,,,1

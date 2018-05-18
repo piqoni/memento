@@ -5,7 +5,8 @@ import csv
 import os
 import tkFont
 import clipboard
-
+import subprocess
+import webbrowser
 
 class AutocompleteEntry(Entry):
     def __init__(self, autocompleteList, *args, **kwargs):
@@ -43,9 +44,12 @@ class AutocompleteEntry(Entry):
 
     def update_content_text(self, event):
         w = event.widget
-        index = int(w.curselection()[0])
+        try:
+            index = int(w.curselection()[0])
+        except IndexError:
+            return
         value = w.get(index)
-        clipboard_content = autocompleteList.get(value)
+        clipboard_content = autocompleteList.get(value)[0]
         content['text'] = clipboard_content
 
     def changed(self, name, index, mode):
@@ -71,7 +75,7 @@ class AutocompleteEntry(Entry):
                     self.listbox.selection_set(first=0)
                     value = self.listbox.get(ACTIVE);
 
-                    clipboard_content = autocompleteList.get(value)
+                    clipboard_content = autocompleteList.get(value)[0]
                     content['text'] = clipboard_content
             else:
                 if self.listboxUp:
@@ -83,12 +87,30 @@ class AutocompleteEntry(Entry):
         if self.listboxUp:
             self.var.set(self.listbox.get(ACTIVE))
             value = self.listbox.get(ACTIVE);
-            clipboard_content = autocompleteList.get(value)
+            data = autocompleteList.get(value)
+            content = data[0]
+            is_command = data[1]
+            is_website = data[2]
+
+            if is_command == '1':
+                self.execute(content)
+            elif is_website == '1':
+                self.open_website(content)
+
             self.listbox.destroy()
             self.listboxUp = False
             self.icursor(END)
-            self.copy_value(clipboard_content)
+            self.copy_value(content)
             self.quit()
+    
+    def open_website(self, url):
+        webbrowser.open(url)
+
+    def execute(self, command):
+        p = subprocess.Popen(command,
+                             bufsize=2048, shell=True, stdin=subprocess.PIPE)
+        (output, err) = p.communicate()
+        p_status = p.wait()
 
     def copy_value(self, value):
         clipboard.copy(value)
@@ -162,8 +184,7 @@ def center_splash_screen(root, width, height):
 if __name__ == '__main__':
     root = Tk()
     root.minsize(width=200, height=390)
-    root.wait_visibility(root)
-    root.wm_attributes('-alpha', 0.8)
+    root.wm_attributes('-alpha',0.8)
     root.wm_attributes('-type', 'combo')
     center_splash_screen(root, 1000, 300)
 
@@ -177,7 +198,7 @@ if __name__ == '__main__':
     #     autocompleteList = { d['id'] : d['value'] for d in loads(data_file.read())}
 
     with open(dir_path + '/memento.csv') as data_file:
-        autocompleteList = {rows[0]: rows[1] for rows in csv.reader(data_file)}
+        autocompleteList = {rows[0]: (rows[1], rows[2], rows[3]) for rows in csv.reader(data_file)}
 
     search_list = list(autocompleteList.keys())
 
